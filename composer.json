@@ -1,5 +1,5 @@
 {
-  "name": "bagisto/bkash",
+  "name": "theihasan/bagisto-bkash",
   "description": "bKash Payment Gateway for Bagisto E-Commerce",
   "type": "library",
   "license": "MIT",
