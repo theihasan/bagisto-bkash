@@ -1,0 +1,38 @@
+{
+  "name": "bagisto/bkash",
+  "description": "bKash Payment Gateway for Bagisto E-Commerce",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Bagisto",
+      "email": "support@bagisto.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4|^8.0|^8.1|^8.2",
+    "theihasan/laravel-bkash": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Webkul\\BkashPayment\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Webkul\\BkashPayment\\Providers\\BkashPaymentServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "keywords": [
+    "bagisto",
+    "bkash",
+    "payment",
+    "gateway",
+    "e-commerce",
+    "laravel"
+  ]
+}
