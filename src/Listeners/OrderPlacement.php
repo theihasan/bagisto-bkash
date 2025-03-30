@@ -1,6 +1,6 @@
 <?php
 
-namespace Listeners;
+namespace Webkul\BkashPayment\Listeners;
 
 use Illuminate\Support\Facades\Log;
 use Webkul\BkashPayment\Models\BkashTransaction;

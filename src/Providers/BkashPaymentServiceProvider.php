@@ -1,12 +1,10 @@
 <?php
 
-namespace Providers;
+namespace Webkul\BkashPayment\Providers;
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Webkul\BkashPayment\Services\BkashConfigManager;
-use function Webkul\BkashPayment\Providers\public_path;
-use function Webkul\BkashPayment\Providers\resource_path;
 
 class BkashPaymentServiceProvider extends ServiceProvider
 {
