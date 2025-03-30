@@ -1,6 +1,6 @@
 <?php
 
-namespace Payment;
+namespace Webkul\BkashPayment\Payment;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -8,10 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Webkul\BkashPayment\Services\BkashPaymentService;
 use Webkul\BkashPayment\Exceptions\PaymentException;
 use Webkul\Payment\Payment\Payment;
-use function Webkul\BkashPayment\Payment\asset;
-use function Webkul\BkashPayment\Payment\cart;
-use function Webkul\BkashPayment\Payment\route;
-use function Webkul\BkashPayment\Payment\session;
+use Webkul\Checkout\Facades\Cart;
 
 class BkashPayment extends Payment
 {
@@ -41,7 +38,7 @@ class BkashPayment extends Payment
     public function getRedirectUrl()
     {
         try {
-            $cart = cart()->getCart();
+            $cart = Cart::getCart();
             $paymentData = $this->bkashPaymentService->createPayment($cart);
 
             Log::info('bKash payment initiated:', $paymentData);
@@ -85,6 +82,6 @@ class BkashPayment extends Payment
     public function getImage(): string
     {
         $url = $this->getConfigData('image');
-        return $url ? Storage::url($url) : asset('vendor/bkash_payment/images/bkash-logo.png');
+        return $url ? Storage::url($url) : '';
     }
 }
