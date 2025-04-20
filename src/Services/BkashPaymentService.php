@@ -47,7 +47,7 @@ class BkashPaymentService
                 'intent'                  => 'sale',
                 'payer_reference'         => $cart->customer_email ?? 'guest-'.$cart->id,
                 'merchant_invoice_number' => 'INV-'.$cart->id.'-'.time(),
-                'callback_url'            => route('bkash.payment.callback'),
+                'callback_url'            => route('bkash.callback'),
             ];
 
             try {
