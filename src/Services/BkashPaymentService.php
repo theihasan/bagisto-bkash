@@ -172,7 +172,7 @@ class BkashPaymentService
         return [
             'mode'                  => '0011',
             'payerReference'        => $cart->customer_email ?? 'guest',
-            'callbackURL'           => route('bkash.callback'),
+            'callbackURL'           => config('app.url').'/bkash/callback',
             'amount'                => number_format($cart->grand_total, 2, '.', ''),
             'currency'              => 'BDT',
             'intent'                => 'sale',
