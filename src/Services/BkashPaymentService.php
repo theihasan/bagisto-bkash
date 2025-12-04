@@ -301,7 +301,7 @@ class BkashPaymentService
 
         $response = Http::bkashWithToken($token, $credentials['app_key'])
             ->timeout(30)
-            ->post("/checkout/payment/query/{$paymentId}");
+            ->get("/checkout/payment/query/{$paymentId}");
 
         if (!$response->successful()) {
             throw new PaymentCreationException(
