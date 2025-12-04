@@ -1,137 +1,78 @@
 # bKash Payment Gateway for Bagisto
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/theihasan/bagisto-bkash.svg?style=flat-square)](https://packagist.org/packages/theihasan/bagisto-bkash)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/theihasan/bagisto-bkash/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/theihasan/bagisto-bkash/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/theihasan/bagisto-bkash/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/theihasan/bagisto-bkash/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/theihasan/bagisto-bkash.svg?style=flat-square)](https://packagist.org/packages/theihasan/bagisto-bkash)
+Latest Version on Packagist 🖼 https://img.shields.io/packagist/v/theihasan/bagisto-bkash.svg?style=flat-square
+https://packagist.org/packages/theihasan/bagisto-bkash GitHub Tests Action Status 🖼
+https://img.shields.io/github/actions/workflow/status/theihasan/bagisto-bkash/run-tests.
+yml?branch=main&label=tests&style=flat-square
+https://github.com/theihasan/bagisto-bkash/actions?query=workflow%3Arun-tests+branch%3Amain Total Downloads 🖼
+https://img.shields.io/packagist/dt/theihasan/bagisto-bkash.svg?style=flat-square
+https://packagist.org/packages/theihasan/bagisto-bkash
 
-A comprehensive bKash payment gateway integration for Bagisto eCommerce platform. This package provides seamless integration with bKash's tokenized checkout API, supporting both sandbox and live environments with robust error handling and automatic token management.
-
-## Features
-
-- 🔒 Secure tokenized payment processing
-- 🌐 Sandbox and Live environment support
-- 🔄 Automatic token refresh and caching
-- 💳 Complete payment lifecycle management
-- 📊 Payment status tracking
-- 🛡️ Comprehensive error handling
-- 🧪 Full test coverage
-- 📝 Extensive logging
+Simple bKash payment integration for Bagisto e-commerce stores.
 
 ## Installation
 
-You can install the package via composer:
-
-```bash
+# Install package
 composer require theihasan/bagisto-bkash
-```
 
-You can publish and run the migrations with:
+# Run installation command
+php artisan bagisto-bkash:install
 
-```bash
-php artisan vendor:publish --tag="bagisto-bkash-migrations"
+# Run migrations
 php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="bagisto-bkash-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="bagisto-bkash-views"
-```
 
 ## Configuration
 
-After installation, configure your bKash credentials in the Bagisto admin panel:
+1. Go to Admin Panel
+ • Navigate to: Configuration → Sales → Payment Methods → bKash
+2. Configure Settings:
+ • Status: Enable
+ • Live Base URL: https://tokenized.pay.bka.sh/v1.2.0-beta
+ • Sandbox Base URL: https://tokenized.sandbox.bka.sh/v1.2.0-beta
+ • Username: Your bKash merchant number
+ • Password: Your bKash password
+ • App Key: Your bKash app key
+ • App Secret: Your bKash app secret
+ • Logo: Upload bKash logo (optional)
+ • Environment: Select Sandbox/Live
+3. Test Credentials (Sandbox):
+ • Username: 01770618567
+ • Password: D7DaC<*E*eG
+ • App Key: 0vWQuCRGiUX7EPVjQDr0EUAYtc
+ • App Secret: jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx
 
-1. Go to **Admin > Configuration > Sales > Payment Methods > bKash**
-2. Enable the payment method
-3. Configure your bKash credentials:
-   - Username
-   - Password  
-   - App Key
-   - App Secret
-   - Base URL (Sandbox/Live)
-4. Set sandbox mode (for testing)
 
-## Usage
+## Verification
 
-### Using the Service
+• Go to your store's checkout page
+• Select bKash as payment method
+• Complete test transaction to verify integration
 
-```php
-use Ihasan\Bkash\Facades\Bkash;
+## Features
 
-// Create a payment
-$payment = Bkash::createPayment($cart);
+• Secure tokenized payment processing
+• Sandbox and Live environment support
+• Automatic token refresh and caching
+• Complete payment lifecycle management
+• Payment status tracking
+• Comprehensive error handling
 
-// Execute a payment  
-$result = Bkash::executePayment($paymentId);
+## Requirements
 
-// Get credentials
-$credentials = Bkash::getCredentials();
-```
-
-### Using the Payment Service Directly
-
-```php
-use Ihasan\Bkash\Services\BkashPaymentService;
-
-$paymentService = app(BkashPaymentService::class);
-
-// Create payment
-$paymentData = $paymentService->createPayment($cart);
-
-// Process callback
-$response = $paymentService->processCallback($request);
-```
-
-### Console Commands
-
-Check payment status:
-```bash
-php artisan bkash:status {payment_id}
-```
-
-View configuration:
-```bash  
-php artisan bkash:status
-```
+• Bagisto 2.x
+• PHP 8.2+
+• Valid bKash merchant account
 
 ## Testing
 
-```bash
 composer test
-```
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [Abul Hassan](https://github.com/theihasan)
-- [All Contributors](../../contributors)
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). Please see License File /LICENSE.md for more information.
+
+---
+
+That's it! bKash payments are now ready. 
+
+---
