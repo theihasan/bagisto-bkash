@@ -3,7 +3,6 @@
 namespace Ihasan\Bkash\Tests;
 
 use Ihasan\Bkash\BkashServiceProvider;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +15,7 @@ abstract class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->setupBkashConfiguration();
         $this->setupDatabase();
     }
@@ -56,7 +55,7 @@ abstract class TestCase extends Orchestra
 
     protected function setupDatabase(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     protected function mockSuccessfulTokenResponse(): void

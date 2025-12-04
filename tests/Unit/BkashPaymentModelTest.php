@@ -2,10 +2,10 @@
 
 namespace Ihasan\Bkash\Tests\Unit;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ihasan\Bkash\Models\BkashPayment;
 use Ihasan\Bkash\PaymentStatus;
 use Ihasan\Bkash\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
 class BkashPaymentModelTest extends TestCase
@@ -38,21 +38,21 @@ class BkashPaymentModelTest extends TestCase
     #[Test]
     public function it_has_correct_table_name(): void
     {
-        $payment = new BkashPayment();
-        
+        $payment = new BkashPayment;
+
         $this->assertEquals('bkash_payments', $payment->getTable());
     }
 
     #[Test]
     public function it_has_correct_fillable_fields(): void
     {
-        $payment = new BkashPayment();
-        
+        $payment = new BkashPayment;
+
         $expectedFillable = [
             'payment_id',
             'token',
             'amount',
-            'invoice_number', 
+            'invoice_number',
             'cart_id',
             'status',
             'meta',
@@ -92,7 +92,7 @@ class BkashPaymentModelTest extends TestCase
         ]);
 
         $payment = BkashPayment::where('payment_id', 'TR0011unique123')->first();
-        
+
         $this->assertNotNull($payment);
         $this->assertEquals('TR0011unique123', $payment->payment_id);
         $this->assertEquals(456, $payment->cart_id);
@@ -117,7 +117,7 @@ class BkashPaymentModelTest extends TestCase
         ]);
 
         $payment->refresh();
-        
+
         $this->assertEquals(PaymentStatus::SUCCESS->value, $payment->status);
         $this->assertArrayHasKey('completed_at', $payment->meta);
     }
@@ -197,7 +197,7 @@ class BkashPaymentModelTest extends TestCase
         ]);
 
         $cartPayment = BkashPayment::where('cart_id', 301)->first();
-        
+
         $this->assertNotNull($cartPayment);
         $this->assertEquals('TR0011cart1', $cartPayment->payment_id);
         $this->assertEquals(301, $cartPayment->cart_id);
@@ -217,7 +217,7 @@ class BkashPaymentModelTest extends TestCase
         ]);
 
         $this->assertEquals('99.99', $payment->amount);
-        
+
         // Test retrieving from database
         $payment->refresh();
         $this->assertEquals('99.99', $payment->amount);

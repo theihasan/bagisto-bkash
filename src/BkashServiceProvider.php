@@ -23,7 +23,7 @@ class BkashServiceProvider extends PackageServiceProvider
             ->hasRoute('web')
             ->hasMigration('create_bkash_payment_table')
             ->hasCommand(BkashCommand::class)
-            ->hasInstallCommand(function($command) {
+            ->hasInstallCommand(function ($command) {
                 $command
                     ->publishMigrations()
                     ->askToRunMigrations()
@@ -34,7 +34,7 @@ class BkashServiceProvider extends PackageServiceProvider
     public function packageBooted()
     {
         $this->registerBkashHttpMacros();
-        
+
         $this->registerBagistoConfiguration();
     }
 
@@ -48,7 +48,7 @@ class BkashServiceProvider extends PackageServiceProvider
 
             return Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Accept'       => 'application/json',
+                'Accept' => 'application/json',
             ])->baseUrl($baseUrl);
         });
 
@@ -59,10 +59,10 @@ class BkashServiceProvider extends PackageServiceProvider
                 : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
 
             return Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'X-APP-Key'     => $appKey,
-                'Content-Type'  => 'application/json',
-                'Accept'        => 'application/json',
+                'Authorization' => 'Bearer '.$token,
+                'X-APP-Key' => $appKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
             ])->baseUrl($baseUrl);
         });
     }
@@ -79,7 +79,7 @@ class BkashServiceProvider extends PackageServiceProvider
         if (function_exists('config')) {
             $paymentMethods = config('bagisto-bkash.payment_methods', []);
             foreach ($paymentMethods as $method) {
-                config(['payment_methods.' . $method['code'] => $method]);
+                config(['payment_methods.'.$method['code'] => $method]);
             }
 
             // Register system configuration properly - add to existing core config array instead of creating nested structure

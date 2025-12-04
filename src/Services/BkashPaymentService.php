@@ -2,20 +2,20 @@
 
 namespace Ihasan\Bkash\Services;
 
+use Ihasan\Bkash\Exceptions\ConfigurationException;
+use Ihasan\Bkash\Exceptions\PaymentCreationException;
+use Ihasan\Bkash\Exceptions\TokenException;
+use Ihasan\Bkash\Models\BkashPayment;
+use Ihasan\Bkash\PaymentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Ihasan\Bkash\Models\BkashPayment;
-use Ihasan\Bkash\PaymentStatus;
 use Webkul\Checkout\Facades\Cart;
 use Webkul\Sales\Models\OrderPayment;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Transformers\OrderResource;
-use Ihasan\Bkash\Exceptions\ConfigurationException;
-use Ihasan\Bkash\Exceptions\PaymentCreationException;
-use Ihasan\Bkash\Exceptions\TokenException;
 
 class BkashPaymentService
 {
@@ -37,14 +37,14 @@ class BkashPaymentService
         $sandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox');
 
         $credentials = [
-            'username'   => core()->getConfigData('sales.payment_methods.bkash.bkash_username'),
-            'password'   => core()->getConfigData('sales.payment_methods.bkash.bkash_password'),
-            'app_key'    => core()->getConfigData('sales.payment_methods.bkash.bkash_app_key'),
+            'username' => core()->getConfigData('sales.payment_methods.bkash.bkash_username'),
+            'password' => core()->getConfigData('sales.payment_methods.bkash.bkash_password'),
+            'app_key' => core()->getConfigData('sales.payment_methods.bkash.bkash_app_key'),
             'app_secret' => core()->getConfigData('sales.payment_methods.bkash.bkash_app_secret'),
-            'base_url'   => $sandbox === '1'
+            'base_url' => $sandbox === '1'
                 ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
                 : core()->getConfigData('sales.payment_methods.bkash.live_base_url'),
-            'sandbox'    => $sandbox === '1' || $sandbox === true,
+            'sandbox' => $sandbox === '1' || $sandbox === true,
         ];
 
         $this->validateCredentials($credentials);
@@ -105,7 +105,7 @@ class BkashPaymentService
         } catch (\Exception $e) {
             Log::error('bkash Token Exception:', [
                 'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw $e;
@@ -123,16 +123,16 @@ class BkashPaymentService
                 'password' => $credentials['password'],
             ])
             ->post('/tokenized/checkout/token/grant', [
-                'app_key'    => $credentials['app_key'],
+                'app_key' => $credentials['app_key'],
                 'app_secret' => $credentials['app_secret'],
             ]);
 
         $data = $response->json();
-        
-        if (!$response->successful() || !isset($data['id_token'])) {
+
+        if (! $response->successful() || ! isset($data['id_token'])) {
             throw new TokenException(
-                'Failed to get bkash token: ' . 
-                ($data['statusMessage'] ?? $data['message'] ?? 'HTTP ' . $response->status())
+                'Failed to get bkash token: '.
+                ($data['statusMessage'] ?? $data['message'] ?? 'HTTP '.$response->status())
             );
         }
 
@@ -157,7 +157,7 @@ class BkashPaymentService
         } catch (\Exception $e) {
             Log::error('bkash Create Payment Exception:', [
                 'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw $e instanceof PaymentCreationException
@@ -172,12 +172,12 @@ class BkashPaymentService
     private function buildPaymentPayload($cart): array
     {
         return [
-            'mode'                  => '0011',
-            'payerReference'        => $cart->customer_email ?? 'guest',
-            'callbackURL'           => config('app.url').'/bkash/callback',
-            'amount'                => number_format($cart->grand_total, 2, '.', ''),
-            'currency'              => 'BDT',
-            'intent'                => 'sale',
+            'mode' => '0011',
+            'payerReference' => $cart->customer_email ?? 'guest',
+            'callbackURL' => config('app.url').'/bkash/callback',
+            'amount' => number_format($cart->grand_total, 2, '.', ''),
+            'currency' => 'BDT',
+            'intent' => 'sale',
             'merchantInvoiceNumber' => 'INV'.$cart->id,
         ];
     }
@@ -217,19 +217,19 @@ class BkashPaymentService
         $status = match ($paymentData['transactionStatus']) {
             'Initiated' => PaymentStatus::INITIATED->value,
             'Completed' => PaymentStatus::COMPLETED,
-            'Failed'    => PaymentStatus::FAILED->value,
+            'Failed' => PaymentStatus::FAILED->value,
             'Cancelled' => PaymentStatus::CANCELLED->value,
-            default     => PaymentStatus::PENDING->value
+            default => PaymentStatus::PENDING->value
         };
 
         BkashPayment::query()->create([
-            'payment_id'     => $paymentData['paymentID'],
-            'token'          => $token,
-            'amount'         => $payload['amount'],
+            'payment_id' => $paymentData['paymentID'],
+            'token' => $token,
+            'amount' => $payload['amount'],
             'invoice_number' => $payload['merchantInvoiceNumber'],
-            'cart_id'        => $cartId,
-            'status'         => $status,
-            'meta'           => json_encode($paymentData),
+            'cart_id' => $cartId,
+            'status' => $status,
+            'meta' => json_encode($paymentData),
         ]);
     }
 
@@ -248,7 +248,7 @@ class BkashPaymentService
 
             Log::info('bKash execute payment:', [
                 'paymentID' => $paymentId,
-                'base_url'  => $credentials['base_url'],
+                'base_url' => $credentials['base_url'],
                 'token_length' => strlen($token),
             ]);
 
@@ -260,13 +260,13 @@ class BkashPaymentService
 
             Log::debug('bKash execute response:', [
                 'status' => $response->status(),
-                'body'   => $response->json(),
+                'body' => $response->json(),
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new PaymentCreationException(
-                    'Payment execution failed: ' . 
-                    ($response->json()['statusMessage'] ?? 'HTTP ' . $response->status())
+                    'Payment execution failed: '.
+                    ($response->json()['statusMessage'] ?? 'HTTP '.$response->status())
                 );
             }
 
@@ -274,7 +274,7 @@ class BkashPaymentService
 
             if ($data['statusCode'] !== '0000') {
                 throw new PaymentCreationException(
-                    'Payment execution failed: ' . ($data['statusMessage'] ?? 'Unknown error')
+                    'Payment execution failed: '.($data['statusMessage'] ?? 'Unknown error')
                 );
             }
 
@@ -287,7 +287,7 @@ class BkashPaymentService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            throw new PaymentCreationException('Payment execution failed: ' . $e->getMessage());
+            throw new PaymentCreationException('Payment execution failed: '.$e->getMessage());
         }
     }
 
@@ -303,10 +303,10 @@ class BkashPaymentService
             ->timeout(30)
             ->get("/checkout/payment/query/{$paymentId}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new PaymentCreationException(
-                'Payment query failed: ' . 
-                ($response->json()['statusMessage'] ?? 'HTTP ' . $response->status())
+                'Payment query failed: '.
+                ($response->json()['statusMessage'] ?? 'HTTP '.$response->status())
             );
         }
 
@@ -318,53 +318,54 @@ class BkashPaymentService
      */
     private function sendExecuteRequest(string $token, string $appKey, string $paymentId)
     {
-        $maxAttempts = 2; 
+        $maxAttempts = 2;
         $attempt = 1;
-        
+
         while ($attempt <= $maxAttempts) {
             Log::debug("bKash execute attempt {$attempt}/{$maxAttempts}", [
                 'paymentID' => $paymentId,
             ]);
-            
+
             $response = Http::bkashWithToken($token, trim($appKey))
-                ->timeout(30) 
+                ->timeout(30)
                 ->post('/tokenized/checkout/execute', [
                     'paymentID' => $paymentId,
                 ]);
-            
+
             $responseData = $response->json();
-            
+
             if ($response->successful() && isset($responseData['statusCode']) && $responseData['statusCode'] === '0000') {
                 return $response;
             }
-            
+
             if (isset($responseData['statusCode']) && $responseData['statusCode'] === '2117') {
-                Log::info("Payment already executed, checking status...", [
+                Log::info('Payment already executed, checking status...', [
                     'paymentID' => $paymentId,
                 ]);
-                
+
                 return $this->handleAlreadyExecutedPayment($token, $appKey, $paymentId, $response);
             }
-            
+
             if (isset($responseData['statusCode']) && $responseData['statusCode'] === '9999' && $attempt < $maxAttempts) {
                 Log::warning("bKash system error on attempt {$attempt}, checking if payment was actually executed...", [
                     'paymentID' => $paymentId,
                     'response' => $responseData,
                 ]);
-                
+
                 $statusResponse = $this->checkExecutionStatus($token, $appKey, $paymentId);
                 if ($statusResponse) {
                     return $statusResponse;
                 }
-                
+
                 sleep(3);
                 $attempt++;
+
                 continue;
             }
-            
+
             return $response;
         }
-        
+
         return $response;
     }
 
@@ -381,18 +382,18 @@ class BkashPaymentService
                 ]);
 
             $statusData = $statusResponse->json();
-            
+
             if ($statusResponse->successful() && isset($statusData['transactionStatus']) && $statusData['transactionStatus'] === 'Completed') {
                 Log::info('Retrieved successful payment data from status query', [
                     'paymentID' => $paymentId,
                     'transactionStatus' => $statusData['transactionStatus'],
                 ]);
-                
+
                 $successData = array_merge($statusData, [
                     'statusCode' => '0000',
-                    'statusMessage' => 'Successful'
+                    'statusMessage' => 'Successful',
                 ]);
-                
+
                 // Create mock response
                 return $this->createMockResponse(200, $successData);
             }
@@ -402,7 +403,7 @@ class BkashPaymentService
                 'error' => $e->getMessage(),
             ]);
         }
-        
+
         // If we can't get status or it's not completed, return original response
         return $originalResponse;
     }
@@ -419,23 +420,23 @@ class BkashPaymentService
                 ]);
 
             $statusData = $statusResponse->json();
-            
+
             Log::debug('Payment status after system error:', [
                 'paymentID' => $paymentId,
                 'statusData' => $statusData,
             ]);
-            
+
             if ($statusResponse->successful() && isset($statusData['transactionStatus']) && $statusData['transactionStatus'] === 'Completed') {
                 Log::info('Payment was actually executed successfully despite system error', [
                     'paymentID' => $paymentId,
                 ]);
-                
+
                 // Create successful response data
                 $successData = array_merge($statusData, [
                     'statusCode' => '0000',
-                    'statusMessage' => 'Successful'
+                    'statusMessage' => 'Successful',
                 ]);
-                
+
                 return $this->createMockResponse(200, $successData);
             }
         } catch (\Exception $e) {
@@ -444,7 +445,7 @@ class BkashPaymentService
                 'error' => $e->getMessage(),
             ]);
         }
-        
+
         return null;
     }
 
@@ -462,12 +463,12 @@ class BkashPaymentService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 Log::debug('Final payment status check:', [
                     'paymentID' => $paymentId,
                     'status' => $data,
                 ]);
-                
+
                 return $data;
             }
         } catch (\Exception $e) {
@@ -476,7 +477,7 @@ class BkashPaymentService
                 'error' => $e->getMessage(),
             ]);
         }
-        
+
         return null;
     }
 
@@ -486,25 +487,31 @@ class BkashPaymentService
     private function createMockResponse(int $status, array $data)
     {
         $response = response()->json($data, $status);
-        
-        return new class($response, $data) {
+
+        return new class($response, $data)
+        {
             private $response;
+
             private $data;
-            
-            public function __construct($response, $data) {
+
+            public function __construct($response, $data)
+            {
                 $this->response = $response;
                 $this->data = $data;
             }
-            
-            public function successful() {
+
+            public function successful()
+            {
                 return true;
             }
-            
-            public function status() {
+
+            public function status()
+            {
                 return 200;
             }
-            
-            public function json() {
+
+            public function json()
+            {
                 return $this->data;
             }
         };
@@ -543,7 +550,7 @@ class BkashPaymentService
             if ($paymentStatus !== 'success') {
                 $bkashPayment->update([
                     'status' => $paymentStatus,
-                    'meta'   => json_encode($request->all()),
+                    'meta' => json_encode($request->all()),
                 ]);
 
                 session()->flash('error', 'Payment was cancelled. Please try again.');
@@ -593,13 +600,13 @@ class BkashPaymentService
 
         Log::debug('Cart found during callback:', [
             'cart_id' => $cartId,
-            'exists'  => (bool) $cart,
+            'exists' => (bool) $cart,
         ]);
 
         if (! $cart) {
             Log::error('Cart not found during bKash callback', [
                 'payment_id' => $paymentId,
-                'cart_id'    => $cartId,
+                'cart_id' => $cartId,
             ]);
             throw new \Exception('Cart not found. Please contact support.');
         }
@@ -616,8 +623,8 @@ class BkashPaymentService
     {
         return DB::transaction(function () use ($bkashPayment, $paymentId, $payment) {
             $bkashPayment->update([
-                'status'         => PaymentStatus::SUCCESS->value,
-                'meta'           => json_encode($payment),
+                'status' => PaymentStatus::SUCCESS->value,
+                'meta' => json_encode($payment),
             ]);
 
             // Create order
@@ -631,7 +638,7 @@ class BkashPaymentService
             session()->flash('order', $order);
 
             Log::debug('bKash payment completed successfully', [
-                'order_id'   => $order->id,
+                'order_id' => $order->id,
                 'payment_id' => $paymentId,
             ]);
 
@@ -666,9 +673,9 @@ class BkashPaymentService
     {
         Log::error('Error creating order after bKash payment', [
             'payment_id' => $paymentId,
-            'cart_id'    => $cartId,
-            'error'      => $e->getMessage(),
-            'trace'      => $e->getTraceAsString(),
+            'cart_id' => $cartId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
         ]);
 
         session()->flash('error', 'Payment processing failed. Please contact support.');
@@ -683,7 +690,7 @@ class BkashPaymentService
     {
         $invoiceData = [
             'order_id' => $order->id,
-            'invoice'  => ['items' => []],
+            'invoice' => ['items' => []],
         ];
 
         foreach ($order->items as $item) {
@@ -701,8 +708,8 @@ class BkashPaymentService
         $jsonData = json_encode([
             'transaction_id' => $transactionId,
             'payment_method' => 'bkash',
-            'status'         => 'completed',
-            'timestamp'      => now()->toIso8601String(),
+            'status' => 'completed',
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         OrderPayment::where('order_id', $orderId)->update([

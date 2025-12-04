@@ -2,10 +2,10 @@
 
 namespace Ihasan\Bkash\Tests\Integration;
 
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Http;
 use Ihasan\Bkash\Services\BkashPaymentService;
 use Ihasan\Bkash\Tests\TestCase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
@@ -17,7 +17,7 @@ class BkashHttpIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->service = new BkashPaymentService(
             $this->app->make(OrderRepository::class),
             $this->app->make(InvoiceRepository::class)
@@ -223,7 +223,7 @@ class BkashHttpIntegrationTest extends TestCase
 
         Http::fake([
             '*checkout/payment/execute/*' => Http::response('{"paymentID":"TR001","statusCode":"0000","statusMessage":"Success"}', 200, [
-                'Content-Type' => 'application/json'
+                'Content-Type' => 'application/json',
             ]),
         ]);
 
@@ -245,6 +245,7 @@ class BkashHttpIntegrationTest extends TestCase
                     $this->assertEquals(['Bearer mock_token_12345'], $request->header('Authorization'));
                     $this->assertEquals(['test_app_key'], $request->header('X-APP-Key'));
                 }
+
                 return Http::response(['statusCode' => '0000'], 200);
             },
         ]);

@@ -2,15 +2,14 @@
 
 namespace Ihasan\Bkash\Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Session;
 use Ihasan\Bkash\Models\BkashPayment;
 use Ihasan\Bkash\Payment\Bkash;
 use Ihasan\Bkash\PaymentStatus;
 use Ihasan\Bkash\Services\BkashPaymentService;
 use Ihasan\Bkash\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use PHPUnit\Framework\Attributes\Test;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
@@ -20,12 +19,13 @@ class PaymentFlowTest extends TestCase
     use RefreshDatabase;
 
     private BkashPaymentService $service;
+
     private Bkash $payment;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->service = new BkashPaymentService(
             $this->app->make(OrderRepository::class),
             $this->app->make(InvoiceRepository::class)
@@ -93,7 +93,7 @@ class PaymentFlowTest extends TestCase
         $this->assertEquals('INV123', $payment->invoice_number);
         $this->assertEquals(123, $payment->cart_id);
         $this->assertEquals(PaymentStatus::INITIATED->value, $payment->status);
-        
+
         $meta = json_decode($payment->meta, true);
         $this->assertIsArray($meta);
         $this->assertEquals('TR0011test123456789', $meta['paymentID']);
@@ -108,8 +108,10 @@ class PaymentFlowTest extends TestCase
 
         // Mock cart() helper
         $this->app->bind('cart', function () {
-            return new class {
-                public function getCart() {
+            return new class
+            {
+                public function getCart()
+                {
                     return (object) [
                         'id' => 123,
                         'customer_email' => 'test@example.com',
@@ -181,7 +183,7 @@ class PaymentFlowTest extends TestCase
 
         // Should redirect back to cart with error
         $this->assertEquals(302, $response->getStatusCode());
-        
+
         // Check payment status was updated
         $payment = BkashPayment::where('payment_id', 'TR0011test123456789')->first();
         $this->assertEquals('failure', $payment->status);
@@ -211,7 +213,7 @@ class PaymentFlowTest extends TestCase
 
         // Should redirect back to cart with error message
         $this->assertEquals(302, $response->getStatusCode());
-        
+
         // Check payment status was updated
         $payment = BkashPayment::where('payment_id', 'TR0011test123456789')->first();
         $this->assertEquals('cancel', $payment->status);
@@ -290,21 +292,37 @@ class PaymentFlowTest extends TestCase
     {
         // Mock cart
         $this->app->bind(\Webkul\Checkout\Models\Cart::class, function () {
-            $cart = new class {
+            $cart = new class
+            {
                 public $id = 123;
-                public function find($id) { return $this; }
+
+                public function find($id)
+                {
+                    return $this;
+                }
             };
+
             return $cart;
         });
 
         // Mock Cart facade
         $this->app->bind('Webkul\Checkout\Facades\Cart', function () {
-            return new class {
-                public static function setCart($cart) { return true; }
-                public static function getCart() { 
+            return new class
+            {
+                public static function setCart($cart)
+                {
+                    return true;
+                }
+
+                public static function getCart()
+                {
                     return (object) ['id' => 123, 'grand_total' => 100.00];
                 }
-                public static function deActivateCart() { return true; }
+
+                public static function deActivateCart()
+                {
+                    return true;
+                }
             };
         });
 
