@@ -127,10 +127,12 @@ class BkashPaymentService
                 'app_secret' => $credentials['app_secret'],
             ]);
 
-        if (! isset($response->json()['id_token'])) {
+        $data = $response->json();
+        
+        if (!$response->successful() || !isset($data['id_token'])) {
             throw new TokenException(
-                'Failed to get bkash token: '.
-                ($response->json('message') ?? 'Unknown error')
+                'Failed to get bkash token: ' . 
+                ($data['statusMessage'] ?? $data['message'] ?? 'HTTP ' . $response->status())
             );
         }
 
@@ -236,36 +238,276 @@ class BkashPaymentService
      */
     public function executePayment(string $paymentId): array
     {
+        try {
+            $credentials = $this->getCredentials();
+            $token = $this->getToken();
+
+            if (empty($token)) {
+                throw new TokenException('Token is empty');
+            }
+
+            Log::info('bKash execute payment:', [
+                'paymentID' => $paymentId,
+                'base_url'  => $credentials['base_url'],
+                'token_length' => strlen($token),
+            ]);
+
+            $response = Http::bkashWithToken($token, $credentials['app_key'])
+                ->timeout(30)
+                ->post('/tokenized/checkout/execute', [
+                    'paymentID' => $paymentId,
+                ]);
+
+            Log::debug('bKash execute response:', [
+                'status' => $response->status(),
+                'body'   => $response->json(),
+            ]);
+
+            if (!$response->successful()) {
+                throw new PaymentCreationException(
+                    'Payment execution failed: ' . 
+                    ($response->json()['statusMessage'] ?? 'HTTP ' . $response->status())
+                );
+            }
+
+            $data = $response->json();
+
+            if ($data['statusCode'] !== '0000') {
+                throw new PaymentCreationException(
+                    'Payment execution failed: ' . ($data['statusMessage'] ?? 'Unknown error')
+                );
+            }
+
+            return $data;
+        } catch (PaymentCreationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('bKash execute payment error:', [
+                'paymentID' => $paymentId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new PaymentCreationException('Payment execution failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Query payment status
+     */
+    public function queryPayment(string $paymentId): array
+    {
         $credentials = $this->getCredentials();
         $token = $this->getToken();
 
-        Log::info('bKash execute request:', [
-            'paymentID'    => $paymentId,
-            'token_length' => strlen($token),
-            'app_key'      => $credentials['app_key'],
-        ]);
+        $response = Http::bkashWithToken($token, $credentials['app_key'])
+            ->timeout(30)
+            ->post("/checkout/payment/query/{$paymentId}");
 
-        $response = $this->sendExecuteRequest($token, $credentials['app_key'], $paymentId);
-
-        Log::debug('bKash execute response:', [
-            'status' => $response->status(),
-            'body'   => $response->json(),
-        ]);
-
-        $this->validateExecuteResponse($response);
+        if (!$response->successful()) {
+            throw new PaymentCreationException(
+                'Payment query failed: ' . 
+                ($response->json()['statusMessage'] ?? 'HTTP ' . $response->status())
+            );
+        }
 
         return $response->json();
     }
 
     /**
-     * Send payment execution request to bKash
+     * Send payment execution request to bKash with retry logic
      */
     private function sendExecuteRequest(string $token, string $appKey, string $paymentId)
     {
-        return Http::bkashWithToken($token, trim($appKey))
-            ->post('/tokenized/checkout/execute', [
+        $maxAttempts = 2; 
+        $attempt = 1;
+        
+        while ($attempt <= $maxAttempts) {
+            Log::debug("bKash execute attempt {$attempt}/{$maxAttempts}", [
                 'paymentID' => $paymentId,
             ]);
+            
+            $response = Http::bkashWithToken($token, trim($appKey))
+                ->timeout(30) 
+                ->post('/tokenized/checkout/execute', [
+                    'paymentID' => $paymentId,
+                ]);
+            
+            $responseData = $response->json();
+            
+            if ($response->successful() && isset($responseData['statusCode']) && $responseData['statusCode'] === '0000') {
+                return $response;
+            }
+            
+            if (isset($responseData['statusCode']) && $responseData['statusCode'] === '2117') {
+                Log::info("Payment already executed, checking status...", [
+                    'paymentID' => $paymentId,
+                ]);
+                
+                return $this->handleAlreadyExecutedPayment($token, $appKey, $paymentId, $response);
+            }
+            
+            if (isset($responseData['statusCode']) && $responseData['statusCode'] === '9999' && $attempt < $maxAttempts) {
+                Log::warning("bKash system error on attempt {$attempt}, checking if payment was actually executed...", [
+                    'paymentID' => $paymentId,
+                    'response' => $responseData,
+                ]);
+                
+                $statusResponse = $this->checkExecutionStatus($token, $appKey, $paymentId);
+                if ($statusResponse) {
+                    return $statusResponse;
+                }
+                
+                sleep(3);
+                $attempt++;
+                continue;
+            }
+            
+            return $response;
+        }
+        
+        return $response;
+    }
+
+    /**
+     * Handle payment that was already executed
+     */
+    private function handleAlreadyExecutedPayment(string $token, string $appKey, string $paymentId, $originalResponse)
+    {
+        try {
+            // Query the payment status to get the successful execution data
+            $statusResponse = Http::bkashWithToken($token, trim($appKey))
+                ->post('/tokenized/checkout/payment/status', [
+                    'paymentID' => $paymentId,
+                ]);
+
+            $statusData = $statusResponse->json();
+            
+            if ($statusResponse->successful() && isset($statusData['transactionStatus']) && $statusData['transactionStatus'] === 'Completed') {
+                Log::info('Retrieved successful payment data from status query', [
+                    'paymentID' => $paymentId,
+                    'transactionStatus' => $statusData['transactionStatus'],
+                ]);
+                
+                $successData = array_merge($statusData, [
+                    'statusCode' => '0000',
+                    'statusMessage' => 'Successful'
+                ]);
+                
+                // Create mock response
+                return $this->createMockResponse(200, $successData);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to query payment status for already executed payment:', [
+                'paymentID' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        
+        // If we can't get status or it's not completed, return original response
+        return $originalResponse;
+    }
+
+    /**
+     * Check if payment was actually executed despite system error
+     */
+    private function checkExecutionStatus(string $token, string $appKey, string $paymentId)
+    {
+        try {
+            $statusResponse = Http::bkashWithToken($token, trim($appKey))
+                ->post('/tokenized/checkout/payment/status', [
+                    'paymentID' => $paymentId,
+                ]);
+
+            $statusData = $statusResponse->json();
+            
+            Log::debug('Payment status after system error:', [
+                'paymentID' => $paymentId,
+                'statusData' => $statusData,
+            ]);
+            
+            if ($statusResponse->successful() && isset($statusData['transactionStatus']) && $statusData['transactionStatus'] === 'Completed') {
+                Log::info('Payment was actually executed successfully despite system error', [
+                    'paymentID' => $paymentId,
+                ]);
+                
+                // Create successful response data
+                $successData = array_merge($statusData, [
+                    'statusCode' => '0000',
+                    'statusMessage' => 'Successful'
+                ]);
+                
+                return $this->createMockResponse(200, $successData);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to check execution status:', [
+                'paymentID' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get final payment status to confirm completion
+     */
+    private function getFinalPaymentStatus(string $token, string $appKey, string $paymentId): ?array
+    {
+        try {
+            $response = Http::bkashWithToken($token, trim($appKey))
+                ->timeout(30)
+                ->post('/tokenized/checkout/payment/status', [
+                    'paymentID' => $paymentId,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                Log::debug('Final payment status check:', [
+                    'paymentID' => $paymentId,
+                    'status' => $data,
+                ]);
+                
+                return $data;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to get final payment status:', [
+                'paymentID' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Create a mock HTTP response for successful payment
+     */
+    private function createMockResponse(int $status, array $data)
+    {
+        $response = response()->json($data, $status);
+        
+        return new class($response, $data) {
+            private $response;
+            private $data;
+            
+            public function __construct($response, $data) {
+                $this->response = $response;
+                $this->data = $data;
+            }
+            
+            public function successful() {
+                return true;
+            }
+            
+            public function status() {
+                return 200;
+            }
+            
+            public function json() {
+                return $this->data;
+            }
+        };
     }
 
     /**
