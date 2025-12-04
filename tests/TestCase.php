@@ -27,11 +27,29 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('database.connections.testing', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => '',
+        ]);
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/../database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        // Load package configuration
+        config()->set('bagisto-bkash', [
+            'payment_methods' => [
+                'bkash' => [
+                    'code'        => 'bkash',
+                    'title'       => 'BKash',
+                    'description' => 'BKash',
+                    'class'       => 'Ihasan\Bkash\Payment\Bkash',
+                    'active'      => true,
+                    'sort'        => 1,
+                ],
+            ],
+            'system_config' => [],
+        ]);
+
+        // Run migrations
+        $migration = include __DIR__.'/../database/migrations/2025_02_24_181736_create_bkash_payment_table.php';
+        $migration->up();
     }
 }
