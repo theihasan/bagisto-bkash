@@ -52,11 +52,9 @@ class BkashPaymentModelTest extends TestCase
             'payment_id',
             'token',
             'amount',
-            'invoice_number',
-            'status',
-            'transaction_id',
+            'invoice_number', 
             'cart_id',
-            'order_id',
+            'status',
             'meta',
         ];
 

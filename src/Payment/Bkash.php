@@ -5,7 +5,6 @@ namespace Ihasan\Bkash\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Ihasan\Bkash\DTO\PaymentCreateResponseDTO;
 use Ihasan\Bkash\Services\BkashPaymentService;
 use Webkul\Payment\Payment\Payment;
 use Webkul\Sales\Repositories\InvoiceRepository;
@@ -30,7 +29,7 @@ class Bkash extends Payment
     /**
      * @throws PaymentCreationException
      */
-    protected function createPayment($cart): PaymentCreateResponseDTO
+    protected function createPayment($cart): array
     {
         return $this->bkashPaymentService->createPayment($cart);
     }
@@ -47,11 +46,11 @@ class Bkash extends Payment
     {
         try {
             $cart = cart()->getCart();
-            $paymentResponse = $this->createPayment($cart);
+            $paymentCreate = $this->createPayment($cart);
 
-            Log::debug('bkash Payment Created:', $paymentResponse->toArray());
+            Log::debug('bkash Payment Created:', $paymentCreate);
 
-            return $paymentResponse->bkashURL;
+            return $paymentCreate['bkashURL'];
         } catch (\Exception $e) {
             Log::error('bkash Redirect URL Exception:', [
                 'message' => $e->getMessage(),
