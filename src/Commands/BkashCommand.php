@@ -25,19 +25,21 @@ class BkashCommand extends Command
     {
         try {
             $payment = \Ihasan\Bkash\Models\BkashPayment::where('payment_id', $paymentId)->first();
-            
-            if (!$payment) {
+
+            if (! $payment) {
                 $this->error("Payment with ID {$paymentId} not found.");
+
                 return self::FAILURE;
             }
 
             $this->info("Payment Status: {$payment->status}");
             $this->info("Amount: {$payment->amount}");
             $this->info("Invoice: {$payment->invoice_number}");
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Error checking payment status: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -48,16 +50,16 @@ class BkashCommand extends Command
         $this->line('');
 
         $sandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox');
-        $this->info('Mode: ' . ($sandbox ? 'Sandbox' : 'Live'));
-        
+        $this->info('Mode: '.($sandbox ? 'Sandbox' : 'Live'));
+
         $baseUrl = $sandbox === '1'
             ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
             : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
-            
-        $this->info('Base URL: ' . ($baseUrl ?: 'Not configured'));
-        
+
+        $this->info('Base URL: '.($baseUrl ?: 'Not configured'));
+
         $username = core()->getConfigData('sales.payment_methods.bkash.bkash_username');
-        $this->info('Username: ' . ($username ? 'Configured' : 'Not configured'));
+        $this->info('Username: '.($username ? 'Configured' : 'Not configured'));
 
         $this->comment('bKash integration is ready!');
 

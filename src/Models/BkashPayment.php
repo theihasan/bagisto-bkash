@@ -82,12 +82,12 @@ class BkashPayment extends Model
     public function getStatusDescriptionAttribute(): string
     {
         $statusMap = [
-            'pending'   => 'Payment is pending',
-            'success'   => 'Payment was successful',
+            'pending' => 'Payment is pending',
+            'success' => 'Payment was successful',
             'completed' => 'Payment was completed',
-            'failed'    => 'Payment failed',
+            'failed' => 'Payment failed',
             'cancelled' => 'Payment was cancelled',
-            'refunded'  => 'Payment was refunded',
+            'refunded' => 'Payment was refunded',
         ];
 
         return $statusMap[$this->status] ?? 'Unknown status';

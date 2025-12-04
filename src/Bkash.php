@@ -2,8 +2,8 @@
 
 namespace Ihasan\Bkash;
 
-use Ihasan\Bkash\Services\BkashPaymentService;
 use Ihasan\Bkash\Contracts\BkashPayment as BkashPaymentContract;
+use Ihasan\Bkash\Services\BkashPaymentService;
 
 class Bkash implements BkashPaymentContract
 {

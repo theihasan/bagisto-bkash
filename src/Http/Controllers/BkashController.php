@@ -2,8 +2,8 @@
 
 namespace Ihasan\Bkash\Http\Controllers;
 
-use Illuminate\Routing\Controller;
 use Ihasan\Bkash\Payment\Bkash;
+use Illuminate\Routing\Controller;
 
 class BkashController extends Controller
 {

@@ -2,16 +2,15 @@
 
 namespace Ihasan\Bkash\Tests\Unit;
 
+use Ihasan\Bkash\Exceptions\ConfigurationException;
+use Ihasan\Bkash\Exceptions\PaymentCreationException;
+use Ihasan\Bkash\Exceptions\TokenException;
+use Ihasan\Bkash\Services\BkashPaymentService;
+use Ihasan\Bkash\Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Ihasan\Bkash\Exceptions\ConfigurationException;
-use Ihasan\Bkash\Exceptions\PaymentCreationException;
-use Ihasan\Bkash\Exceptions\TokenException;
-use Ihasan\Bkash\Models\BkashPayment;
-use Ihasan\Bkash\Services\BkashPaymentService;
-use Ihasan\Bkash\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
@@ -23,7 +22,7 @@ class BkashPaymentServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->service = new BkashPaymentService(
             $this->app->make(OrderRepository::class),
             $this->app->make(InvoiceRepository::class)
@@ -42,7 +41,7 @@ class BkashPaymentServiceTest extends TestCase
         $this->assertArrayHasKey('app_secret', $credentials);
         $this->assertArrayHasKey('base_url', $credentials);
         $this->assertArrayHasKey('sandbox', $credentials);
-        
+
         $this->assertEquals('test_username', $credentials['username']);
         $this->assertEquals('test_password', $credentials['password']);
         $this->assertEquals('test_app_key', $credentials['app_key']);
@@ -70,7 +69,7 @@ class BkashPaymentServiceTest extends TestCase
         $token = $this->service->getToken();
 
         $this->assertEquals('mock_token_12345', $token);
-        
+
         // Verify token is cached
         $this->assertTrue(Cache::has('bkash_token'));
         $this->assertEquals('mock_token_12345', Cache::get('bkash_token'));
@@ -80,7 +79,7 @@ class BkashPaymentServiceTest extends TestCase
     public function it_returns_cached_token_when_available(): void
     {
         Cache::put('bkash_token', 'cached_token_123', now()->addHour());
-        
+
         Http::fake(); // No HTTP calls should be made
 
         $token = $this->service->getToken();
@@ -127,7 +126,7 @@ class BkashPaymentServiceTest extends TestCase
     public function it_throws_exception_for_failed_payment_creation(): void
     {
         $this->mockSuccessfulTokenResponse();
-        
+
         Http::fake([
             '*/checkout/payment/create' => Http::response([
                 'statusCode' => '2001',
@@ -174,7 +173,7 @@ class BkashPaymentServiceTest extends TestCase
     public function it_can_query_payment_status(): void
     {
         $this->mockSuccessfulTokenResponse();
-        
+
         Http::fake([
             '*/checkout/payment/query/*' => Http::response([
                 'paymentID' => 'TR0011test123456789',
@@ -198,7 +197,7 @@ class BkashPaymentServiceTest extends TestCase
     public function it_throws_exception_for_failed_payment_query(): void
     {
         $this->mockSuccessfulTokenResponse();
-        
+
         Http::fake([
             '*/checkout/payment/query/*' => Http::response([
                 'statusCode' => '2001',
@@ -216,12 +215,12 @@ class BkashPaymentServiceTest extends TestCase
     public function it_builds_correct_payment_payload(): void
     {
         $this->mockSuccessfulTokenResponse();
-        
+
         // Capture the request payload
         Http::fake([
             '*/checkout/payment/create' => function ($request) {
                 $payload = $request->data();
-                
+
                 $this->assertEquals('0011', $payload['mode']);
                 $this->assertEquals('test@example.com', $payload['payerReference']);
                 $this->assertEquals('100.00', $payload['amount']);
@@ -229,7 +228,7 @@ class BkashPaymentServiceTest extends TestCase
                 $this->assertEquals('sale', $payload['intent']);
                 $this->assertEquals('INV123', $payload['merchantInvoiceNumber']);
                 $this->assertStringContains('/bkash/callback', $payload['callbackURL']);
-                
+
                 return Http::response(['statusCode' => '0000'], 200);
             },
         ]);
@@ -302,7 +301,7 @@ class BkashPaymentServiceTest extends TestCase
                 $this->assertEquals('application/json', $request->header('Accept')[0]);
                 $this->assertEquals('test_username', $request->header('username')[0]);
                 $this->assertEquals('test_password', $request->header('password')[0]);
-                
+
                 return Http::response(['id_token' => 'mock_token'], 200);
             },
         ]);
@@ -321,7 +320,7 @@ class BkashPaymentServiceTest extends TestCase
                 $this->assertEquals('test_app_key', $request->header('X-APP-Key')[0]);
                 $this->assertEquals('application/json', $request->header('Content-Type')[0]);
                 $this->assertEquals('application/json', $request->header('Accept')[0]);
-                
+
                 return Http::response(['statusCode' => '0000'], 200);
             },
         ]);

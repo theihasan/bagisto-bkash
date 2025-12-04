@@ -2,14 +2,14 @@
 
 namespace Ihasan\Bkash\Payment;
 
+use Ihasan\Bkash\Exceptions\PaymentCreationException;
+use Ihasan\Bkash\Services\BkashPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Ihasan\Bkash\Services\BkashPaymentService;
 use Webkul\Payment\Payment\Payment;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
-use Ihasan\Bkash\Exceptions\PaymentCreationException;
 
 class Bkash extends Payment
 {
@@ -54,7 +54,7 @@ class Bkash extends Payment
         } catch (\Exception $e) {
             Log::error('bkash Redirect URL Exception:', [
                 'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             session()->flash('error', $e->getMessage());

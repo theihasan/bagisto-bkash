@@ -10,5 +10,6 @@ enum PaymentStatus: string
     case FAILED = 'failed';
     case CANCELLED = 'cancelled';
     case REFUNDED = 'refunded';
+
     const COMPLETED = 'completed';
 }
