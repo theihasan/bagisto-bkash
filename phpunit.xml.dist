@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
     backupGlobals="false"
     bootstrap="vendor/autoload.php"
     colors="true"
@@ -16,16 +16,36 @@
     backupStaticProperties="false"
 >
     <testsuites>
-        <testsuite name="Ihasan Test Suite">
+        <testsuite name="bKash Package Test Suite">
             <directory>tests</directory>
         </testsuite>
+        <testsuite name="Unit Tests">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration Tests">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Feature Tests">
+            <directory>tests/Feature</directory>
+        </testsuite>
     </testsuites>
-    <logging>
-        <junit outputFile="build/report.junit.xml"/>
-    </logging>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:ZGfpHPsX/nrS0fy+v6J4OEZ8xHBOzKhKZfLn7sV8mQI="/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="MAIL_MAILER" value="log"/>
+    </php>
     <source>
         <include>
             <directory suffix=".php">./src</directory>
         </include>
+        <exclude>
+            <directory suffix=".php">./src/Commands</directory>
+            <file>./src/Bkash.php</file>
+        </exclude>
     </source>
 </phpunit>
