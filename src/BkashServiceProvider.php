@@ -22,7 +22,13 @@ class BkashServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasRoute('web')
             ->hasMigration('create_bkash_payment_table')
-            ->hasCommand(BkashCommand::class);
+            ->hasCommand(BkashCommand::class)
+            ->hasInstallCommand(function($command) {
+                $command
+                    ->publishMigrations()
+                    ->askToRunMigrations()
+                    ->askToStarRepoOnGitHub('theihasan/bagisto-bkash');
+            });
     }
 
     public function packageBooted()
@@ -53,7 +59,7 @@ class BkashServiceProvider extends PackageServiceProvider
                 : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
 
             return Http::withHeaders([
-                'Authorization' => $token,
+                'Authorization' => 'Bearer ' . $token,
                 'X-APP-Key'     => $appKey,
                 'Content-Type'  => 'application/json',
                 'Accept'        => 'application/json',
