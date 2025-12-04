@@ -33,7 +33,8 @@ return [
     'system_config' => [
         [
             'key'    => 'sales.payment_methods.bkash',
-            'name'   => 'bkash',
+            'name'   => 'bKash Payment',
+            'info'   => 'Configure bKash payment method settings',
             'sort'   => 1,
             'fields' => [
                 [

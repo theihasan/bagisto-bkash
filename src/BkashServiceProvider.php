@@ -76,10 +76,13 @@ class BkashServiceProvider extends PackageServiceProvider
                 config(['payment_methods.' . $method['code'] => $method]);
             }
 
+            // Register system configuration properly - add to existing core config array instead of creating nested structure
             $systemConfig = config('bagisto-bkash.system_config', []);
+            $existingCoreConfig = config('core', []);
             foreach ($systemConfig as $config) {
-                config(['core.' . $config['key'] => $config]);
+                $existingCoreConfig[] = $config;
             }
+            config(['core' => $existingCoreConfig]);
         }
     }
 }
