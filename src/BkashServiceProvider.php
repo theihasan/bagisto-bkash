@@ -41,10 +41,19 @@ class BkashServiceProvider extends PackageServiceProvider
     protected function registerBkashHttpMacros(): void
     {
         Http::macro('bkash', function () {
-            $isSandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox') === '1';
-            $baseUrl = $isSandbox
-                ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
-                : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
+            // Get configuration - use core() if available (Bagisto environment), otherwise use config() helper
+            if (function_exists('core')) {
+                $isSandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox') === '1';
+                $baseUrl = $isSandbox
+                    ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
+                    : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
+            } else {
+                // Fallback for testing environment - use default URLs
+                $isSandbox = config('bagisto-bkash.payment_methods.bkash.sandbox', true);
+                $baseUrl = $isSandbox
+                    ? 'https://checkout.sandbox.bka.sh/v1.2.0-beta'
+                    : 'https://checkout.pay.bka.sh/v1.2.0-beta';
+            }
 
             return Http::withHeaders([
                 'Content-Type' => 'application/json',
@@ -53,10 +62,19 @@ class BkashServiceProvider extends PackageServiceProvider
         });
 
         Http::macro('bkashWithToken', function ($token, $appKey) {
-            $isSandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox') === '1';
-            $baseUrl = $isSandbox
-                ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
-                : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
+            // Get configuration - use core() if available (Bagisto environment), otherwise use config() helper
+            if (function_exists('core')) {
+                $isSandbox = core()->getConfigData('sales.payment_methods.bkash.bkash_sandbox') === '1';
+                $baseUrl = $isSandbox
+                    ? core()->getConfigData('sales.payment_methods.bkash.sandbox_base_url')
+                    : core()->getConfigData('sales.payment_methods.bkash.live_base_url');
+            } else {
+                // Fallback for testing environment - use default URLs
+                $isSandbox = config('bagisto-bkash.payment_methods.bkash.sandbox', true);
+                $baseUrl = $isSandbox
+                    ? 'https://checkout.sandbox.bka.sh/v1.2.0-beta'
+                    : 'https://checkout.pay.bka.sh/v1.2.0-beta';
+            }
 
             return Http::withHeaders([
                 'Authorization' => 'Bearer ' . $token,

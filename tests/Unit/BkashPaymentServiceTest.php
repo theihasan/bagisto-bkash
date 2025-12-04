@@ -13,8 +13,7 @@ use Ihasan\Bkash\Models\BkashPayment;
 use Ihasan\Bkash\Services\BkashPaymentService;
 use Ihasan\Bkash\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Webkul\Sales\Repositories\InvoiceRepository;
-use Webkul\Sales\Repositories\OrderRepository;
+use Mockery;
 
 class BkashPaymentServiceTest extends TestCase
 {
@@ -24,9 +23,13 @@ class BkashPaymentServiceTest extends TestCase
     {
         parent::setUp();
         
+        // Create mock repositories
+        $orderRepository = Mockery::mock('Webkul\Sales\Repositories\OrderRepository');
+        $invoiceRepository = Mockery::mock('Webkul\Sales\Repositories\InvoiceRepository');
+        
         $this->service = new BkashPaymentService(
-            $this->app->make(OrderRepository::class),
-            $this->app->make(InvoiceRepository::class)
+            $orderRepository,
+            $invoiceRepository
         );
     }
 
@@ -35,20 +38,14 @@ class BkashPaymentServiceTest extends TestCase
     {
         $credentials = $this->service->getCredentials();
 
-        $this->assertIsArray($credentials);
-        $this->assertArrayHasKey('username', $credentials);
-        $this->assertArrayHasKey('password', $credentials);
-        $this->assertArrayHasKey('app_key', $credentials);
-        $this->assertArrayHasKey('app_secret', $credentials);
-        $this->assertArrayHasKey('base_url', $credentials);
-        $this->assertArrayHasKey('sandbox', $credentials);
+        $this->assertInstanceOf(\Ihasan\Bkash\DTO\BkashCredentialsDTO::class, $credentials);
         
-        $this->assertEquals('test_username', $credentials['username']);
-        $this->assertEquals('test_password', $credentials['password']);
-        $this->assertEquals('test_app_key', $credentials['app_key']);
-        $this->assertEquals('test_app_secret', $credentials['app_secret']);
-        $this->assertEquals('https://checkout.sandbox.bka.sh/v1.2.0-beta', $credentials['base_url']);
-        $this->assertTrue($credentials['sandbox']);
+        $this->assertEquals('test_username', $credentials->username);
+        $this->assertEquals('test_password', $credentials->password);
+        $this->assertEquals('test_app_key', $credentials->appKey);
+        $this->assertEquals('test_app_secret', $credentials->appSecret);
+        $this->assertEquals('https://checkout.sandbox.bka.sh/v1.2.0-beta', $credentials->baseUrl);
+        $this->assertTrue($credentials->sandbox);
     }
 
     #[Test]
@@ -109,10 +106,10 @@ class BkashPaymentServiceTest extends TestCase
         $cart = $this->createMockCart();
         $result = $this->service->createPayment($cart);
 
-        $this->assertIsArray($result);
-        $this->assertEquals('TR0011test123456789', $result['paymentID']);
-        $this->assertEquals('Initiated', $result['transactionStatus']);
-        $this->assertEquals('0000', $result['statusCode']);
+        $this->assertInstanceOf(\Ihasan\Bkash\DTO\PaymentCreateResponseDTO::class, $result);
+        $this->assertEquals('TR0011test123456789', $result->paymentID);
+        $this->assertEquals('Initiated', $result->transactionStatus);
+        $this->assertEquals('0000', $result->statusCode);
 
         // Verify payment is saved to database
         $this->assertDatabaseHas('bkash_payments', [
@@ -151,11 +148,11 @@ class BkashPaymentServiceTest extends TestCase
 
         $result = $this->service->executePayment('TR0011test123456789');
 
-        $this->assertIsArray($result);
-        $this->assertEquals('TR0011test123456789', $result['paymentID']);
-        $this->assertEquals('TXN123456789', $result['trxID']);
-        $this->assertEquals('Completed', $result['transactionStatus']);
-        $this->assertEquals('0000', $result['statusCode']);
+        $this->assertInstanceOf(\Ihasan\Bkash\DTO\PaymentExecuteResponseDTO::class, $result);
+        $this->assertEquals('TR0011test123456789', $result->paymentID);
+        $this->assertEquals('TXN123456789', $result->trxID);
+        $this->assertEquals('Completed', $result->transactionStatus);
+        $this->assertEquals('0000', $result->statusCode);
     }
 
     #[Test]
@@ -178,9 +175,18 @@ class BkashPaymentServiceTest extends TestCase
         Http::fake([
             '*/checkout/payment/query/*' => Http::response([
                 'paymentID' => 'TR0011test123456789',
-                'transactionStatus' => 'Completed',
+                'mode' => '0011',
+                'paymentCreateTime' => '2024-01-01T12:00:00:000 GMT+0600',
                 'amount' => '100.00',
                 'currency' => 'BDT',
+                'intent' => 'sale',
+                'merchantInvoice' => 'INV123',
+                'transactionStatus' => 'Completed',
+                'maxRefundableAmount' => '100.00',
+                'verificationStatus' => 'Complete',
+                'payerReference' => 'test@example.com',
+                'payerType' => 'Customer',
+                'payerAccount' => '01700000000',
                 'statusCode' => '0000',
                 'statusMessage' => 'Successful',
             ], 200),
@@ -188,10 +194,10 @@ class BkashPaymentServiceTest extends TestCase
 
         $result = $this->service->queryPayment('TR0011test123456789');
 
-        $this->assertIsArray($result);
-        $this->assertEquals('TR0011test123456789', $result['paymentID']);
-        $this->assertEquals('Completed', $result['transactionStatus']);
-        $this->assertEquals('0000', $result['statusCode']);
+        $this->assertInstanceOf(\Ihasan\Bkash\DTO\PaymentQueryResponseDTO::class, $result);
+        $this->assertEquals('TR0011test123456789', $result->paymentID);
+        $this->assertEquals('Completed', $result->transactionStatus);
+        $this->assertEquals('0000', $result->statusCode);
     }
 
     #[Test]
@@ -228,9 +234,24 @@ class BkashPaymentServiceTest extends TestCase
                 $this->assertEquals('BDT', $payload['currency']);
                 $this->assertEquals('sale', $payload['intent']);
                 $this->assertEquals('INV123', $payload['merchantInvoiceNumber']);
-                $this->assertStringContains('/bkash/callback', $payload['callbackURL']);
+                $this->assertStringContainsString('/bkash/callback', $payload['callbackURL']);
                 
-                return Http::response(['statusCode' => '0000'], 200);
+                return Http::response([
+                    'paymentID' => 'TR0011test123456789',
+                    'bkashURL' => 'https://sandbox.payment.bkash.com/?paymentId=TR0011test123456789',
+                    'callbackURL' => 'http://localhost/bkash/callback',
+                    'successCallbackURL' => 'http://localhost/bkash/callback?status=success',
+                    'failureCallbackURL' => 'http://localhost/bkash/callback?status=failure',
+                    'cancelledCallbackURL' => 'http://localhost/bkash/callback?status=cancel',
+                    'amount' => '100.00',
+                    'intent' => 'sale',
+                    'currency' => 'BDT',
+                    'paymentCreateTime' => '2024-01-01T12:00:00:000 GMT+0600',
+                    'transactionStatus' => 'Initiated',
+                    'merchantInvoiceNumber' => 'INV123',
+                    'statusCode' => '0000',
+                    'statusMessage' => 'Successful'
+                ], 200);
             },
         ]);
 
@@ -245,8 +266,8 @@ class BkashPaymentServiceTest extends TestCase
 
         $credentials = $this->service->getCredentials();
 
-        $this->assertEquals('https://checkout.pay.bka.sh/v1.2.0-beta', $credentials['base_url']);
-        $this->assertFalse($credentials['sandbox']);
+        $this->assertEquals('https://checkout.pay.bka.sh/v1.2.0-beta', $credentials->baseUrl);
+        $this->assertFalse($credentials->sandbox);
     }
 
     #[Test]
@@ -322,7 +343,19 @@ class BkashPaymentServiceTest extends TestCase
                 $this->assertEquals('application/json', $request->header('Content-Type')[0]);
                 $this->assertEquals('application/json', $request->header('Accept')[0]);
                 
-                return Http::response(['statusCode' => '0000'], 200);
+                return Http::response([
+                    'paymentID' => 'TR0011test123456789',
+                    'trxID' => 'TXN123456789',
+                    'transactionStatus' => 'Completed',
+                    'amount' => '100.00',
+                    'currency' => 'BDT',
+                    'intent' => 'sale',
+                    'paymentExecuteTime' => '2024-01-01T12:00:00:000 GMT+0600',
+                    'merchantInvoiceNumber' => 'INV123',
+                    'payerReference' => 'test@example.com',
+                    'statusCode' => '0000',
+                    'statusMessage' => 'Successful'
+                ], 200);
             },
         ]);
 

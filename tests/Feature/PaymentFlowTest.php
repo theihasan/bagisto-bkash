@@ -48,7 +48,7 @@ class PaymentFlowTest extends TestCase
         $cart = $this->createMockCart();
         $paymentData = $this->service->createPayment($cart);
 
-        $this->assertEquals('TR0011test123456789', $paymentData['paymentID']);
+        $this->assertEquals('TR0011test123456789', $paymentData->paymentID);
         $this->assertDatabaseHas('bkash_payments', [
             'payment_id' => 'TR0011test123456789',
             'cart_id' => 123,
@@ -72,8 +72,8 @@ class PaymentFlowTest extends TestCase
         // Process callback would normally create order, but we'll test the payment execution part
         $executionResult = $this->service->executePayment('TR0011test123456789');
 
-        $this->assertEquals('TR0011test123456789', $executionResult['paymentID']);
-        $this->assertEquals('Completed', $executionResult['transactionStatus']);
+        $this->assertEquals('TR0011test123456789', $executionResult->paymentID);
+        $this->assertEquals('Completed', $executionResult->transactionStatus);
     }
 
     #[Test]
