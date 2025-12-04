@@ -1,19 +1,22 @@
-# Seamless Bkash Transactions for Your Bagisto Store
+# bKash Payment Gateway for Bagisto
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/theihasan/bagisto-bkash.svg?style=flat-square)](https://packagist.org/packages/theihasan/bagisto-bkash)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/theihasan/bagisto-bkash/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/theihasan/bagisto-bkash/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/theihasan/bagisto-bkash/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/theihasan/bagisto-bkash/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/theihasan/bagisto-bkash.svg?style=flat-square)](https://packagist.org/packages/theihasan/bagisto-bkash)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+A comprehensive bKash payment gateway integration for Bagisto eCommerce platform. This package provides seamless integration with bKash's tokenized checkout API, supporting both sandbox and live environments with robust error handling and automatic token management.
 
-## Support us
+## Features
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/bagisto-bkash.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/bagisto-bkash)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- 🔒 Secure tokenized payment processing
+- 🌐 Sandbox and Live environment support
+- 🔄 Automatic token refresh and caching
+- 💳 Complete payment lifecycle management
+- 📊 Payment status tracking
+- 🛡️ Comprehensive error handling
+- 🧪 Full test coverage
+- 📝 Extensive logging
 
 ## Installation
 
@@ -49,11 +52,61 @@ Optionally, you can publish the views using
 php artisan vendor:publish --tag="bagisto-bkash-views"
 ```
 
+## Configuration
+
+After installation, configure your bKash credentials in the Bagisto admin panel:
+
+1. Go to **Admin > Configuration > Sales > Payment Methods > bKash**
+2. Enable the payment method
+3. Configure your bKash credentials:
+   - Username
+   - Password  
+   - App Key
+   - App Secret
+   - Base URL (Sandbox/Live)
+4. Set sandbox mode (for testing)
+
 ## Usage
 
+### Using the Service
+
 ```php
-$bkash = new Ihasan\Bkash();
-echo $bkash->echoPhrase('Hello, Ihasan!');
+use Ihasan\Bkash\Facades\Bkash;
+
+// Create a payment
+$payment = Bkash::createPayment($cart);
+
+// Execute a payment  
+$result = Bkash::executePayment($paymentId);
+
+// Get credentials
+$credentials = Bkash::getCredentials();
+```
+
+### Using the Payment Service Directly
+
+```php
+use Ihasan\Bkash\Services\BkashPaymentService;
+
+$paymentService = app(BkashPaymentService::class);
+
+// Create payment
+$paymentData = $paymentService->createPayment($cart);
+
+// Process callback
+$response = $paymentService->processCallback($request);
+```
+
+### Console Commands
+
+Check payment status:
+```bash
+php artisan bkash:status {payment_id}
+```
+
+View configuration:
+```bash  
+php artisan bkash:status
 ```
 
 ## Testing
