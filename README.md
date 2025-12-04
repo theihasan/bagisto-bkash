@@ -4,22 +4,22 @@ Simple bKash payment integration for Bagisto e-commerce stores.
 ## Installation
 
 # Install package
-composer require theihasan/bagisto-bkash
+```composer require theihasan/bagisto-bkash```
 
 # Run installation command
-php artisan bagisto-bkash:install
+```php artisan bagisto-bkash:install```
 
 # Run migrations
-php artisan migrate
+```php artisan migrate```
 
 ## Configuration
 
 1. Go to Admin Panel
-   - Navigate to: Configuration → Sales → Payment Methods → bKash
+   - Navigate to: `Configuration → Sales → Payment Methods → bKash`
 2. Configure Settings:
    - Status: Enable
-   - Live Base URL: https://tokenized.pay.bka.sh/v1.2.0-beta
-   - Sandbox Base URL: https://tokenized.sandbox.bka.sh/v1.2.0-beta
+   - Live Base URL: `https://tokenized.pay.bka.sh/v1.2.0-beta`
+   - Sandbox Base URL: `https://tokenized.sandbox.bka.sh/v1.2.0-beta`
    - Username: Your bKash merchant number
    - Password: Your bKash password
    - App Key: Your bKash app key
@@ -27,11 +27,10 @@ php artisan migrate
    - Logo: Upload bKash logo (optional)
    - Environment: Select Sandbox/Live
 3. Test Credentials (Sandbox):
-  - Username: 01770618567
-  - Password: D7DaC<*E*eG
-  - App Key: 0vWQuCRGiUX7EPVjQDr0EUAYtc
-  - App Secret: jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx
-
+  - Username: `01770618567`
+  - Password: `D7DaC<*E*eG`
+  - App Key: `0vWQuCRGiUX7EPVjQDr0EUAYtc`
+  - App Secret: `jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx`
 
 ## Verification
 
